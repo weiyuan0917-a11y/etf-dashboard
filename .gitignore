@@ -1,0 +1,44 @@
+# ============ Python ============
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# ============ 数据 & 临时文件（不推） ============
+# SQLite 数据库太大，且含本地账户/路径/历史记录
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# 采集日志含本地绝对路径
+data/*.log
+data/*.lock
+data/update_done.json
+
+# logs/ 目录下的运行日志
+logs/
+
+# ============ AI / WorkBuddy 工作日志 ============
+# 含绝对路径、用户操作记录，不推
+.workbuddy/
+
+# ============ Streamlit ============
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+# ============ 编辑器 / OS ============
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============ 测试产物 ============
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg
