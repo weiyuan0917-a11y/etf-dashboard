@@ -44,7 +44,13 @@ streamlit run app.py
 
 ## 📸 截图
 
-> 待补充：主页 / 筛选 / 画像 / 资金分配 / 模拟交易 / 网格 / AI 复盘
+> 数据为 2026-09-18 实跑：清单 1621 只、行情 1618 只、约 80 万行。
+
+| 主页 | 筛选 | 画像 | 模拟交易 |
+|---|---|---|---|
+| ![](docs/screenshots/01_home.png) | ![](docs/screenshots/02_screener.png) | ![](docs/screenshots/03_profile.png) | ![](docs/screenshots/04_trading.png) |
+
+*（AI 复盘截图见 `pages/3_模拟交易.py` 末 tab，需先在「⚙️ 设置」填入 LLM key 才能用）*
 
 ## 🏗️ 技术栈
 
