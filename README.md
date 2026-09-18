@@ -20,25 +20,38 @@
 
 ## 🚀 快速开始
 
+### 🪟 Windows 用户（推荐，**双击即用**）
+
+1. 装 [Python 3.10+](https://www.python.org/downloads/)（**勾上** Add to PATH）
+2. 下载项目（`git clone` 或 [下载 ZIP](https://github.com/weiyuan0917-a11y/etf-dashboard/archive/refs/heads/main.zip)）
+3. **双击 `start.bat`** → 首次装依赖（1-3 分钟）→ 自动开浏览器
+
+详细图文步骤：[docs/WINDOWS_QUICKSTART.md](docs/WINDOWS_QUICKSTART.md)
+
+### 🐧 macOS / Linux / WSL
+
 ```bash
 # 1. 克隆仓库
 git clone https://github.com/weiyuan0917-a11y/etf-dashboard.git
 cd etf-dashboard
 
 # 2. 安装依赖
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 
 # 3. 采集数据（首次约 3-5 分钟：清单 + 规模前 300 只近 3 年日频行情）
-python collector/update.py
-
-# 可选参数：
-python collector/update.py --all      # 全量采集
-python collector/update.py --top 100  # 只取前 100 只
+python3 collector/update.py
+# 可选：python3 collector/update.py --all  全量采集
 
 # 4. 启动看板
-streamlit run app.py
+python3 -m streamlit run app.py
 # 浏览器自动打开 http://localhost:8501
 ```
+
+### 🐳 Docker（Coming soon）
+
+打包成单容器部署的计划见 [issue tracker](#)。
+
+---
 
 第一次跑 `collector/update.py` 会创建 `data/etf.db` 并填充约 1600 只 ETF 的近 3 年日线数据（≈ 80 万行）。
 

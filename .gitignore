@@ -42,3 +42,8 @@ desktop.ini
 .coverage
 htmlcov/
 *.egg
+
+# ============ PyInstaller 产物(EXE 路线曾用,start.bat 路线不需要) ============
+build/
+dist/
+*.spec
