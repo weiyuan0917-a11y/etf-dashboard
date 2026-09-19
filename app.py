@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""A 股 ETF 工具台 V1.0.1 · 主页
+"""A 股 ETF 工具台 V1.3 · 主页
 运行：streamlit run app.py
 """
 import sys
@@ -32,7 +32,7 @@ st.markdown(
   <div style="font-size:1.7rem;font-weight:800;letter-spacing:-0.02em;">📊 A 股 ETF 工具台</div>
 </div>
 <div style="color:var(--muted);font-size:0.9rem;margin-bottom:1.2rem;">
-  V1.0.1 · 日频数据版 —— <b>筛选</b> · <b>画像</b> · <b>资金分配器</b>
+  V1.3 · 日频数据版 —— <b>筛选</b> · <b>画像</b> · <b>资金分配</b> · <b>网格</b> · <b>AI 复盘</b> · <b>估值</b> · <b>轮动</b>
 </div>
 """,
     unsafe_allow_html=True,

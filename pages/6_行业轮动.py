@@ -67,9 +67,15 @@ def _signal_badge(s: str) -> str:
 
 
 def _color_chg(v):
-    """涨跌幅染色:涨红跌绿(A 股惯例)"""
+    """涨跌幅染色:涨红跌绿(A 股惯例) · 兼容 str(格式化后)/float 两种入参"""
     if pd.isna(v):
         return ""
+    if isinstance(v, str):
+        s = v.replace("%", "").replace("+", "").strip()
+        try:
+            v = float(s)
+        except (TypeError, ValueError):
+            return ""
     if v >= 3: return "color: #b91c1c; font-weight: 700"
     if v >= 0: return "color: #dc2626"
     if v >= -3: return "color: #059669"
@@ -78,6 +84,11 @@ def _color_chg(v):
 
 def _color_score(s):
     if pd.isna(s): return ""
+    if isinstance(s, str):
+        try:
+            s = float(s.strip())
+        except (TypeError, ValueError):
+            return ""
     if s >= 65: return "background-color: #a7f3d0; color: #065f46; font-weight: 700"
     if s >= 40: return "background-color: #fef3c7; color: #92400e"
     return "background-color: #fee2e2; color: #b91c1c"
