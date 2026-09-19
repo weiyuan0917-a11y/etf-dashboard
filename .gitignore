@@ -53,4 +53,7 @@ dist/
 # ============ Inno Setup build artifacts (publish as GitHub Release assets) ============
 installer-output/
 _launcher-test/
+_installer-validation-*/
+installer-build*.log
+installer-validation*.log
 streamlit.log

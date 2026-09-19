@@ -27,8 +27,8 @@ PrivilegesRequiredOverridesAllowed=dialog
 ; 输出目录
 OutputDir=installer-output
 OutputBaseFilename=ETF-Tools-Setup-v{#MyAppVersion}
-; 压缩: lzma2/ultra 体积最小但编译慢
-Compression=lzma2/ultra
+; 使用快速 LZMA2，优先保证包含便携运行时的安装包能稳定完成构建。
+Compression=lzma2/fast
 ; 最小 Windows 版本: Win 10 1809 (10.0.17763) - Python 3.13 要求
 MinVersion=10.0.17763
 ; 64 位 only(项目只支持 64)
@@ -63,6 +63,7 @@ Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "start.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "pages\*"; DestDir: "{app}\pages"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "metrics\*"; DestDir: "{app}\metrics"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "collector\*"; DestDir: "{app}\collector"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "scripts\*"; DestDir: "{app}\scripts"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
