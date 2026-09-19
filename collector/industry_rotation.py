@@ -81,6 +81,20 @@ def _compute_industry_metrics(verbose: bool = True) -> pd.DataFrame:
     def _get(code: str, key: str, default=None):
         return live_map.get(code, {}).get(key, default)
 
+    # 行业 ETF 池:每个行业的 amount 从本地最近一日行情取(优先有成交额的那天)
+    # live.py 的新浪源目前没 amount 字段,只能用 daily_quotes 兜底
+    daily_amount_map: dict[str, float] = {}
+    try:
+        for _code in etf_list["code"].tolist():
+            _q = storage.load_quotes(_code)
+            if _q is None or _q.empty or "amount" not in _q.columns:
+                continue
+            _last = _q.dropna(subset=["amount"]).tail(1)
+            if not _last.empty:
+                daily_amount_map[_code] = float(_last["amount"].iloc[0])
+    except Exception:  # noqa: BLE001
+        daily_amount_map = {}
+
     rows: list[dict] = []
     for ind_name, kw in INDUSTRY_KEYWORDS:
         # 1. 选行业 ETF
@@ -129,6 +143,8 @@ def _compute_industry_metrics(verbose: bool = True) -> pd.DataFrame:
         members["live_chg"] = members["code"].map(lambda c: _get(c, "chg_pct"))
         members["live_amount"] = members["code"].map(lambda c: _get(c, "amount"))
         members["premium"] = members["code"].map(lambda c: _get(c, "premium_rate"))
+        # 成交额兜底:新浪源无 amount 字段时用本地最近一日的 amount
+        members["live_amount"] = members["live_amount"].fillna(members["code"].map(daily_amount_map))
         members["live_chg"] = members["live_chg"].fillna(members["chg_1d"])
 
         # 4. 行业聚合
