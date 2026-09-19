@@ -34,7 +34,9 @@ st.markdown(
 )
 
 storage.init_db()
-df = storage.list_index_universe()
+
+if "index_valuation_refresh_message" in st.session_state:
+    st.success(st.session_state.pop("index_valuation_refresh_message"))
 
 # 侧栏状态
 _done = storage.get_index_valuation_done()
@@ -44,13 +46,40 @@ if _done:
         f"({_done['ok']} ok / {_done['skipped']} 暂无 / {_done['fail']} fail)"
     )
 
+refresh_col, hint_col = st.columns([1, 3], vertical_alignment="center")
+with refresh_col:
+    refresh_index_valuation = st.button(
+        "🔄 立即更新估值",
+        type="primary",
+        key="refresh_index_valuation",
+        width="stretch",
+    )
+with hint_col:
+    st.caption("首次更新约需 1–2 分钟；会从公开数据源拉取历史 PE/PB，完成后自动刷新页面。")
+
+if refresh_index_valuation:
+    try:
+        from collector.index_valuation import update_index_valuation
+
+        with st.spinner("正在更新指数估值历史数据，请勿关闭页面..."):
+            result = update_index_valuation(verbose=False)
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"指数估值更新失败：{exc}")
+    else:
+        st.session_state["index_valuation_refresh_message"] = (
+            f"指数估值已更新：{result['ok']} 个指数成功，"
+            f"{result['skipped']} 个暂未收录，耗时 {result['elapsed_s']} 秒。"
+        )
+        st.rerun()
+
+df = storage.list_index_universe()
 if df.empty:
-    st.warning("暂无数据,请先运行 `python -m collector.index_valuation`")
+    st.warning("暂无估值数据，请点击上方“立即更新估值”开始采集。")
     st.info(
         "**采集源说明**：\n"
-        "- PE/PB 历史：legulegu（中证指数镜像,覆盖中证系 + 上证系）\n"
-        "- 创业板 / 科创 50 / 深证成指：legulegu 暂无历史 PE/PB,标\"待补\"\n"
-        "- 采集器限流 1.2s/只,首次约 1-2 分钟"
+        "- PE/PB 历史：legulegu（中证指数镜像，覆盖中证系 + 上证系）\n"
+        "- 创业板 / 科创 50 / 深证成指：legulegu 暂无历史 PE/PB，标“待补”\n"
+        "- 采集器限流 1.2 秒/只，首次约 1–2 分钟"
     )
     st.stop()
 
@@ -220,8 +249,8 @@ if not df_unavailable.empty:
 # ========== 4. 说明 ==========
 st.markdown("---")
 st.caption(
-    "**数据源**：akshare.stock_index_pe_lg / stock_index_pb_lg (legulegu 镜像) · "
-    "**采集命令**：`python -m collector.index_valuation` · "
-    "**分位算法**：当前值在过去所有月度样本中的百分位(0-100%) · "
+    "**数据源**：akshare.stock_index_pe_lg / stock_index_pb_lg（legulegu 镜像） · "
+    "**更新方式**：点击页面上方“立即更新估值” · "
+    "**分位算法**：当前值在过去所有月度样本中的百分位（0–100%） · "
     "**⚠️ 本页输出仅供研究参考,不构成投资建议**"
 )

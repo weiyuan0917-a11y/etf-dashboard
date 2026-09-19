@@ -32,6 +32,9 @@ st.markdown(
 
 storage.init_db()
 
+if "industry_rotation_refresh_message" in st.session_state:
+    st.success(st.session_state.pop("industry_rotation_refresh_message"))
+
 # 完成时间
 _done = storage.get_industry_done()
 if _done:
@@ -39,6 +42,34 @@ if _done:
         f"📅 行业轮动更新于 {_done['finished_at']} "
         f"({_done['n']} 个行业, {_done['elapsed_s']}s)"
     )
+
+refresh_col, hint_col = st.columns([1, 3], vertical_alignment="center")
+with refresh_col:
+    refresh_industry_rotation = st.button(
+        "🔄 立即更新轮动",
+        type="primary",
+        key="refresh_industry_rotation",
+        width="stretch",
+    )
+with hint_col:
+    st.caption("约需 5–15 秒；会拉取实时行情并重新计算 27 个行业的动量、活跃度与估值得分。")
+
+if refresh_industry_rotation:
+    try:
+        from collector.industry_rotation import update_industry_strength
+
+        with st.spinner("正在更新行业轮动信号，请稍候..."):
+            result = update_industry_strength(verbose=False)
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"行业轮动更新失败：{exc}")
+    else:
+        if result["fail"]:
+            st.warning("未能生成行业轮动数据：请先在首页完成 ETF 行情更新后重试。")
+        else:
+            st.session_state["industry_rotation_refresh_message"] = (
+                f"行业轮动已更新：{result['ok']} 个行业，耗时 {result['elapsed_s']} 秒。"
+            )
+            st.rerun()
 
 with storage.get_conn() as conn:
     rows = conn.execute(
@@ -51,8 +82,8 @@ with storage.get_conn() as conn:
 df = pd.DataFrame(rows, columns=cols) if rows else pd.DataFrame(columns=cols)
 
 if df.empty:
-    st.warning("暂无数据,请先运行 `python -m collector.industry_rotation`")
-    st.info("**首次需要 ~5 秒**(拉实时行情 + 算 27 个行业指标),之后可重复跑做日度刷新。")
+    st.warning("暂无行业轮动数据，请点击上方“立即更新轮动”开始计算。")
+    st.info("首次需要约 5–15 秒（拉实时行情并计算 27 个行业指标）；后续可随时点击做日度刷新。")
     st.stop()
 
 
@@ -179,8 +210,8 @@ with st.expander("📐 打分模型说明", expanded=False):
 
 # ========== 4. 免责 + 提示 ==========
 st.caption(
-    "**⚠️ 本页输出仅供研究参考,不构成投资建议** · "
-    "**数据源**:本地 ETF 行情 + 实时行情(新浪) · "
-    "**采集命令**:`python -m collector.industry_rotation` · "
-    f"**最后更新**:{df['updated_at'].iloc[0] if len(df) > 0 else '-'}"
+    "**⚠️ 本页输出仅供研究参考，不构成投资建议** · "
+    "**数据源**：本地 ETF 行情 + 实时行情（新浪） · "
+    "**更新方式**：点击页面上方“立即更新轮动” · "
+    f"**最后更新**：{df['updated_at'].iloc[0] if len(df) > 0 else '-'}"
 )

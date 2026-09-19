@@ -22,9 +22,15 @@
 
 ## 🚀 快速开始
 
-### 🪟 Windows 用户（推荐，免安装 Python）
+### 🪟 Windows 用户：一键快速安装（推荐）
 
-1. 从 [Releases](https://github.com/weiyuan0917-a11y/etf-dashboard/releases) 下载 `ETF-Tools-Setup-v1.3.exe`
+> 无需安装 Python，无需手动配置环境，下载后双击即可安装。
+>
+> **[⬇️ 下载 Windows 一键安装包 ETF-Tools-Setup-v1.3.exe](https://github.com/weiyuan0917-a11y/etf-dashboard/releases/download/V1.3/ETF-Tools-Setup-v1.3.exe)**
+>
+> [查看 V1.3 Release 页面](https://github.com/weiyuan0917-a11y/etf-dashboard/releases/tag/V1.3)
+
+1. 点击上方链接下载安装包 `ETF-Tools-Setup-v1.3.exe`
 2. 双击安装，完成后勾选“启动 ETF 工具台”
 3. 浏览器会自动打开本地页面；程序使用内置 Python 运行时，无需安装 Python 或联网安装依赖
 
