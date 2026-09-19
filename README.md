@@ -22,11 +22,13 @@
 
 ## 🚀 快速开始
 
-### 🪟 Windows 用户（推荐，**双击即用**）
+### 🪟 Windows 用户（推荐，免安装 Python）
 
-1. 装 [Python 3.10+](https://www.python.org/downloads/)（**勾上** Add to PATH）
-2. 下载项目（`git clone` 或 [下载 ZIP](https://github.com/weiyuan0917-a11y/etf-dashboard/archive/refs/heads/main.zip)）
-3. **双击 `start.bat`** → 首次装依赖（1-3 分钟）→ 自动开浏览器
+1. 从 [Releases](https://github.com/weiyuan0917-a11y/etf-dashboard/releases) 下载 `ETF-Tools-Setup-v1.3.exe`
+2. 双击安装，完成后勾选“启动 ETF 工具台”
+3. 浏览器会自动打开本地页面；程序使用内置 Python 运行时，无需安装 Python 或联网安装依赖
+
+安装版会将本地数据保存在用户 AppData 目录。源码运行或需要自行更新依赖时，可继续使用下方 macOS / Linux / WSL 的命令方式（Windows PowerShell 同样适用）。
 
 详细图文步骤：[docs/WINDOWS_QUICKSTART.md](docs/WINDOWS_QUICKSTART.md)
 
