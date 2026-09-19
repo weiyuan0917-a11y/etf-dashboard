@@ -17,6 +17,8 @@ data/*.db-shm
 data/*.log
 data/*.lock
 data/update_done.json
+data/industry_done.json
+data/index_valuation_done.json
 
 # logs/ 目录下的运行日志
 logs/

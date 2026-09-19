@@ -16,7 +16,9 @@
 - **📐 网格交易**：可视化网格档位、当前价驱动档位判断（🟥买/🟩卖/➖持）、15 秒实时刷新
 - **🤖 AI 持仓复盘**（可选）：用 DeepSeek / OpenAI / 自定义 LLM 给持仓/网格做复盘，自动 fallback 应对 reasoning 模型截断
 - **🔄 实时行情**：新浪源（5只 0.19s / 50只 0.16s），避开东财 push2 限流
-- **📦 一键更新**：侧栏按钮支持「规模前 300」/「全量」两种模式，可加 Windows 任务计划
+- **📊 指数估值分位**（V1.3 新增）：主要宽基 PE-TTM / PB 历史分位，5 档色块
+- **🌊 行业轮动信号**（V1.3 新增）：27 个行业 ETF 池强弱打分（动量 50% + 活跃度 30% + 估值反向 20%）
+- **📦 一键更新**：侧栏按钮支持「规模前 300」/「全量」/「指数估值」/「行业轮动」四种模式，可加 Windows 任务计划
 
 ## 🚀 快速开始
 
@@ -57,11 +59,15 @@ python3 -m streamlit run app.py
 
 ## 📸 截图
 
-> 数据为 2026-09-18 实跑：清单 1621 只、行情 1618 只、约 80 万行。
+> 数据为 2026-09-19 实跑：清单 1621 只、行情 1618 只、行业轮动 27 个、指数估值 5 只宽基历史完整。
 
-| 主页 | 筛选 | 画像 | 模拟交易 |
+| 主页 (V1.3) | 筛选 | 画像 | 模拟交易 |
 |---|---|---|---|
-| ![](docs/screenshots/01_home.png) | ![](docs/screenshots/02_screener.png) | ![](docs/screenshots/03_profile.png) | ![](docs/screenshots/04_trading.png) |
+| ![](docs/screenshots/08_home_v13.png) | ![](docs/screenshots/02_screener.png) | ![](docs/screenshots/03_profile.png) | ![](docs/screenshots/04_trading.png) |
+
+| 指数估值 (V1.3) | 行业轮动 (V1.3) |
+|---|---|
+| ![](docs/screenshots/06_index_valuation.png) | ![](docs/screenshots/07_industry_rotation.png) |
 
 *（AI 复盘截图见 `pages/3_模拟交易.py` 末 tab，需先在「⚙️ 设置」填入 LLM key 才能用）*
 
@@ -116,7 +122,7 @@ etf-dashboard/
 - [x] V1.0 — 筛选 / 画像 / 资金分配
 - [x] V1.1 — 模拟交易 / 网格交易 / 实时行情
 - [x] V1.2 — LLM 持仓复盘
-- [ ] V1.3 — 指数估值分位 / 行业轮动
+- [x] V1.3 — 指数估值分位 / 行业轮动信号
 - [ ] V2.0 — 信号引擎（T+0/T+1 判定）/ 仓位预警分级推送
 - [ ] V3.0 — 与 LongPort / 富途 API 打通实盘（保留人工确认）
 

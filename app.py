@@ -118,6 +118,42 @@ with st.sidebar:
             pass
         st.rerun()
 
+    def _start_valuation() -> None:
+        """启动指数估值采集(独立子进程)"""
+        _LOG_VAL = Path(config.DB_PATH).parent / "valuation.log"
+        _LOCK_VAL = Path(config.DB_PATH).parent / "valuation.lock"
+        try:
+            _LOCK_VAL.write_text(
+                json.dumps({"pid": 0, "mode": "valuation",
+                            "started_at": time.strftime("%Y-%m-%d %H:%M:%S")},
+                           ensure_ascii=False),
+                encoding="utf-8",
+            )
+        except Exception:  # noqa: BLE001
+            pass
+        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0  # type: ignore[attr-defined]
+        subprocess.Popen(
+            [sys.executable, "-m", "collector.index_valuation"],
+            stdout=open(_LOG_VAL, "a", encoding="utf-8"),
+            stderr=subprocess.STDOUT,
+            cwd=str(Path(__file__).resolve().parent),
+            creationflags=creationflags,
+        )
+        st.toast("📈 指数估值采集已启动,1-2 分钟后刷新页面", icon="📊")
+        st.rerun()
+
+    def _start_industry() -> None:
+        """启动行业轮动采集(独立子进程)"""
+        _LOG_IND = Path(config.DB_PATH).parent / "industry.log"
+        subprocess.Popen(
+            [sys.executable, "-m", "collector.industry_rotation"],
+            stdout=open(_LOG_IND, "a", encoding="utf-8"),
+            stderr=subprocess.STDOUT,
+            cwd=str(Path(__file__).resolve().parent),
+        )
+        st.toast("🌊 行业轮动计算中,5 秒后刷新页面", icon="⚡")
+        st.rerun()
+
     _lock = _read_lock()
     if _lock:
         st.warning(
@@ -175,6 +211,24 @@ with st.sidebar:
                 if st.button("取消", key="upd_all_cancel", width="stretch"):
                     st.session_state.pop("upd_confirm_all", None)
                     st.rerun()
+
+        # ---- V1.3 新增：指数估值 + 行业轮动（独立小任务）----
+        st.markdown("##### 📊 估值/轮动(V1.3)")
+        c3, c4 = st.columns(2)
+        with c3:
+            if st.button(
+                "📈 指数估值",
+                key="upd_valuation", type="secondary", width="stretch",
+                help="拉主要宽基指数 PE/PB 历史,约 1-2 分钟(legulegu 限流)",
+            ):
+                _start_valuation()
+        with c4:
+            if st.button(
+                "🌊 行业轮动",
+                key="upd_industry", type="secondary", width="stretch",
+                help="算 27 个行业 ETF 强弱得分,约 5 秒",
+            ):
+                _start_industry()
 
         # 显示 update.py 退出时写的完成标记
         if _DONE.exists():
@@ -271,13 +325,31 @@ st.markdown("&nbsp;", unsafe_allow_html=True)
 
 # ---------- 板块导航卡 ----------
 st.markdown("##### 功能导航")
+# V1.3 改为 5 个,两行布局(3 + 2)
 n1, n2, n3 = st.columns(3)
-nav = [
+nav_row1 = [
     ("🔍 ETF 筛选", "按关键词/规模/成交额过滤，6 个维度排序", "pages/1_ETF筛选.py"),
     ("📈 ETF 画像", "单只走势 + MA + 关键指标 + 折溢价", "pages/2_ETF画像.py"),
-    ("💼 模拟交易", "分配器 · 模拟下单 · 网格 · 持仓 · 流水（持久化）", "pages/3_模拟交易.py"),
+    ("💼 模拟交易", "分配器 · 模拟下单 · 网格 · 持仓 · 流水", "pages/3_模拟交易.py"),
 ]
-for col, (title, sub, _path) in zip([n1, n2, n3], nav):
+for col, (title, sub, _path) in zip([n1, n2, n3], nav_row1):
+    with col:
+        st.markdown(
+            f'<div style="background:var(--bg-card);border:1px solid var(--border);'
+            f'border-radius:10px;padding:16px 18px;height:96px;">'
+            f'<div style="font-size:1.05rem;font-weight:700;color:var(--text);">{title}</div>'
+            f'<div style="color:var(--muted);font-size:0.85rem;margin-top:6px;">{sub}</div>'
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+
+# V1.3 第二行
+n4, n5, _ = st.columns(3)
+nav_row2 = [
+    ("📊 指数估值", "宽基指数 PE/PB 历史分位,5 档色块", "pages/5_指数估值.py"),
+    ("🌊 行业轮动", "27 个行业 ETF 强弱 + 做多/观望/减仓信号", "pages/6_行业轮动.py"),
+]
+for col, (title, sub, _path) in zip([n4, n5], nav_row2):
     with col:
         st.markdown(
             f'<div style="background:var(--bg-card);border:1px solid var(--border);'

@@ -44,6 +44,39 @@ def init_db() -> None:
                 value TEXT
             );
             CREATE INDEX IF NOT EXISTS idx_quotes_code ON quotes(code);
+            CREATE INDEX IF NOT EXISTS idx_quotes_date ON quotes(trade_date);
+
+            -- ============ 指数估值（V1.3 新增）============
+            CREATE TABLE IF NOT EXISTS index_valuation (
+                code        TEXT NOT NULL,           -- 指数简称键，如 sh000300
+                name        TEXT NOT NULL,           -- 显示名，如 沪深300
+                trade_date  TEXT NOT NULL,            -- 月末日期
+                close       REAL,                     -- 指数收盘点位
+                pe_ttm      REAL,                     -- 滚动市盈率
+                pe_static   REAL,                     -- 静态市盈率
+                pb          REAL,                     -- 市净率
+                source      TEXT NOT NULL,            -- legulegu / sina
+                PRIMARY KEY (code, trade_date)
+            );
+            CREATE INDEX IF NOT EXISTS idx_iv_code ON index_valuation(code);
+            CREATE INDEX IF NOT EXISTS idx_iv_date ON index_valuation(trade_date);
+
+            -- ============ 行业轮动（V1.3 新增）============
+            -- 行业强弱指标(按 ETF 关键词聚合),从行情实时算
+            CREATE TABLE IF NOT EXISTS industry_strength (
+                industry   TEXT PRIMARY KEY,           -- 行业关键词
+                n_etf      INTEGER,                    -- 样本 ETF 数
+                total_mv   REAL,                       -- 总规模(亿元)
+                avg_chg_1d REAL,                       -- 1日平均涨跌 %
+                avg_chg_5d REAL,                       -- 5日
+                avg_chg_20d REAL,                      -- 20日
+                avg_chg_60d REAL,                      -- 60日
+                activity   REAL,                       -- 活跃度 = 成交额/规模
+                avg_premium REAL,                      -- 平均溢价率 %
+                score      REAL,                       -- 综合得分(0-100)
+                signal     TEXT,                       -- 做多/观望/减仓
+                updated_at TEXT
+            );
             """
         )
         _init_trade_tables(conn)
@@ -463,3 +496,96 @@ def delete_grid(grid_id: int) -> None:
     with get_conn() as conn:
         conn.execute("DELETE FROM grid_trades WHERE grid_id=?", (grid_id,))
         conn.execute("DELETE FROM grids WHERE id=?", (grid_id,))
+
+
+# ============================================================
+#  指数估值（V1.3 新增）
+# ============================================================
+
+def list_index_universe() -> pd.DataFrame:
+    """返回指数清单 + 各指数最新一行 PE/PB + 历史分位。
+
+    列: code, name, last_date, last_close, pe_ttm, pe_static, pb,
+        pe_ttm_pct, pb_pct, pe_static_pct, history_rows, source
+    """
+    with get_conn() as conn:
+        # 全部历史
+        all_rows = conn.execute(
+            "SELECT code, name, trade_date, close, pe_ttm, pe_static, pb, source "
+            "FROM index_valuation ORDER BY code, trade_date"
+        ).fetchall()
+        cols = ["code", "name", "trade_date", "close", "pe_ttm", "pe_static", "pb", "source"]
+        df = pd.DataFrame(all_rows, columns=cols) if all_rows else pd.DataFrame(columns=cols)
+
+    if df.empty:
+        return df
+
+    out_rows = []
+    for code, grp in df.groupby("code", sort=False):
+        name = grp["name"].iloc[-1]
+        grp = grp.sort_values("trade_date")
+        last = grp.iloc[-1]
+        hist = grp.dropna(subset=["pe_ttm"])["pe_ttm"] if grp["pe_ttm"].notna().any() else pd.Series([], dtype=float)
+        hist_pb = grp.dropna(subset=["pb"])["pb"] if grp["pb"].notna().any() else pd.Series([], dtype=float)
+
+        def pct(series: pd.Series, current: float | None) -> float | None:
+            if current is None or pd.isna(current) or len(series) == 0:
+                return None
+            return round(float((series <= current).sum() / len(series) * 100), 1)
+
+        out_rows.append({
+            "code": code,
+            "name": name,
+            "last_date": str(last["trade_date"]),
+            "last_close": float(last["close"]) if pd.notna(last["close"]) else None,
+            "pe_ttm": float(last["pe_ttm"]) if pd.notna(last["pe_ttm"]) else None,
+            "pe_static": float(last["pe_static"]) if pd.notna(last["pe_static"]) else None,
+            "pb": float(last["pb"]) if pd.notna(last["pb"]) else None,
+            "pe_ttm_pct": pct(hist, last["pe_ttm"]),
+            "pb_pct": pct(hist_pb, last["pb"]),
+            "pe_static_pct": pct(grp.dropna(subset=["pe_static"])["pe_static"], last["pe_static"]),
+            "history_rows": len(grp),
+            "source": last["source"],
+        })
+    return pd.DataFrame(out_rows)
+
+
+def get_index_history(code: str) -> pd.DataFrame:
+    """返回单只指数的全部历史,空表返回空 DataFrame。"""
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT trade_date, close, pe_ttm, pe_static, pb "
+            "FROM index_valuation WHERE code=? ORDER BY trade_date",
+            (code,),
+        ).fetchall()
+    if not rows:
+        return pd.DataFrame(columns=["trade_date", "close", "pe_ttm", "pe_static", "pb"])
+    df = pd.DataFrame(rows, columns=["trade_date", "close", "pe_ttm", "pe_static", "pb"])
+    df["trade_date"] = pd.to_datetime(df["trade_date"])
+    return df
+
+
+def get_index_valuation_done() -> dict | None:
+    """读取最近一次指数估值采集的完成标记(用于侧栏显示时间)。"""
+    import json
+    from pathlib import Path
+    p = Path(config.DB_PATH).parent / "index_valuation_done.json"
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def get_industry_done() -> dict | None:
+    """读取最近一次行业轮动采集的完成标记(用于侧栏显示时间)。"""
+    import json
+    from pathlib import Path
+    p = Path(config.DB_PATH).parent / "industry_done.json"
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return None
